@@ -5,7 +5,7 @@ import random
 from io import BytesIO
 
 # --- [1. 기본 설정] ---
-st.set_page_config(page_title="JJ 쇼츠 마스터 2호점 (디자인강화)", page_icon="🏛️", layout="wide")
+st.set_page_config(page_title="JJ 쇼츠 마스터 2호점 (옐로우)", page_icon="🟡", layout="wide")
 
 FONT_FILE = "NanumGothic-ExtraBold.ttf"
 SAVE_DIR = "saved_images"
@@ -52,7 +52,7 @@ VIRAL_QUESTIONS = [
     "가장 비호감이라고\n생각하는 인물은?"
 ]
 
-# --- [3. 인물 데이터베이스 (2호점용 대규모 명단)] ---
+# --- [3. 인물 데이터베이스] ---
 DB_PRESIDENTS = ["윤석열", "문재인", "박근혜", "이명박", "노무현", "김대중", "김영삼", "노태우", "전두환", "박정희", "이승만"]
 DB_FIRST_LADIES = ["김건희", "김정숙", "김혜경", "이순자", "권양숙", "손명순", "김옥숙"]
 DB_CONSERVATIVE = ["한동훈", "이준석", "오세훈", "홍준표", "나경원", "안철수", "원희룡", "배현진", "주호영", "권성동", "장제원", "김기현", "인요한", "추경호"]
@@ -89,7 +89,6 @@ def create_quiz_image(target_names, d):
     # 상단 바
     draw.rectangle([(0, 0), (1080, d['top_h'])], fill=d['top_bg'])
     try:
-        # [NEW] 글자 위치 정밀 조절 반영
         text_x = 540
         text_y = (d['top_h'] / 2) + d['top_y_adj']
         draw.text((text_x, text_y), d['top_text'], font=font_top, fill=d['top_color'], anchor="mm", align="center", spacing=d['top_lh'])
@@ -108,7 +107,6 @@ def create_quiz_image(target_names, d):
             img = Image.new('RGB', (cell_w, cell_h), (50, 50, 50))
             ImageDraw.Draw(img).text((cell_w/2, cell_h/2), "사진 없음", font=get_font(40), fill="white", anchor="mm")
         
-        # 줌/크롭
         zoom = d['img_zoom']
         img_ratio, target_ratio = img.width / img.height, cell_w / cell_h
         if img_ratio > target_ratio:
@@ -136,7 +134,6 @@ def create_quiz_image(target_names, d):
     # 하단 바
     draw.rectangle([(0, 1920 - d['bot_h']), (1080, 1920)], fill=d['bot_bg'])
     try:
-        # [NEW] 글자 위치 정밀 조절 반영
         bot_text_x = 540
         bot_text_y = (1920 - (d['bot_h'] / 2)) + d['bot_y_adj']
         draw.text((bot_text_x, bot_text_y), d['bot_text'], font=font_bot, fill=d['bot_color'], anchor="mm", align="center", spacing=d['bot_lh'])
@@ -144,7 +141,7 @@ def create_quiz_image(target_names, d):
     return canvas
 
 # --- [5. 메인 UI] ---
-st.title("🏛️ 2호점: 매운맛 쇼츠 생성기 (정밀조절)")
+st.title("🟡 2호점: 옐로우 에디션 (정밀조절)")
 col_L, col_R = st.columns([1, 1.3])
 
 with col_L:
@@ -185,45 +182,50 @@ with col_L:
         top_text = st.text_area("상단 문구 수정", st.session_state.q_text, height=80)
     
     # 3. 디자인 정밀 조절
-    st.header("🎨 디자인 초정밀 설정")
+    st.header("🎨 디자인 초정밀 설정 (노란맛)")
     
     with st.expander("⬆️ 상단 바 (Top Bar) 설정", expanded=True):
         col_t1, col_t2 = st.columns(2)
         with col_t1:
-            top_h = st.slider("배경 높이", 100, 600, 400, help="검은색 배경의 높이를 조절합니다.")
-            top_bg = st.color_picker("배경색", "#000000", key="tbg")
+            top_h = st.slider("배경 높이", 100, 600, 400)
+            # [변경] 기본값 노란색(#FFFF00)
+            top_bg = st.color_picker("배경색", "#FFFF00", key="tbg")
         with col_t2:
             top_fs = st.slider("글자 크기", 20, 150, 65)
-            top_color = st.color_picker("글자색", "#FF0000", key="tc")
+            # [변경] 글자색 기본 검정(#000000)
+            top_color = st.color_picker("글자색", "#000000", key="tc")
         
         st.markdown("---")
-        st.markdown("**👇 위치 & 간격 미세조절**")
-        top_lh = st.slider("행간 (줄 간격)", 0, 150, 20, help="글자가 여러 줄일 때 줄 사이 간격입니다.")
-        top_y_adj = st.slider("글자 위치 (위/아래 이동)", -200, 200, 0, help="양수(+)면 아래로, 음수(-)면 위로 움직입니다. 사진과의 간격을 조절하세요.")
+        top_lh = st.slider("행간 (줄 간격)", 0, 150, 20)
+        top_y_adj = st.slider("글자 위치 (위/아래)", -200, 200, 0)
 
     with st.expander("⬇️ 하단 바 (Bottom Bar) 설정", expanded=False):
         bot_text = st.text_area("하단 문구", "인물을 두번 톡톡 누르고,\n댓글 남겨주세요!!")
         col_b1, col_b2 = st.columns(2)
         with col_b1:
             bot_h = st.slider("배경 높이", 100, 600, 350, key="bh")
-            bot_bg = st.color_picker("배경색", "#000000", key="bbg")
+            # [변경] 기본값 노란색
+            bot_bg = st.color_picker("배경색", "#FFFF00", key="bbg")
         with col_b2:
             bot_fs = st.slider("글자 크기", 20, 150, 45, key="bfs")
-            bot_color = st.color_picker("글자색", "#FFFF00", key="bc")
+            # [변경] 글자색 기본 검정
+            bot_color = st.color_picker("글자색", "#000000", key="bc")
         
         st.markdown("---")
         bot_lh = st.slider("행간 (줄 간격)", 0, 150, 20, key="blh")
-        bot_y_adj = st.slider("글자 위치 (위/아래 이동)", -200, 200, 0, key="bya", help="글자를 위로 올리면 사진과 가까워집니다.")
+        bot_y_adj = st.slider("글자 위치 (위/아래)", -200, 200, 0, key="bya")
 
     with st.expander("🖼️ 사진 & 이름표 설정", expanded=False):
         img_zoom = st.slider("사진 확대", 1.0, 3.0, 1.0, 0.1)
         label_h = st.slider("이름표 높이", 30, 200, 80)
         label_fs = st.slider("이름 글자 크기", 20, 100, 45)
         c3, c4 = st.columns(2)
+        # 이름표는 빨강 배경이 눈에 잘 띔
         label_bg = c3.color_picker("이름표 배경", "#FF0000", key="lbg")
         label_color = c4.color_picker("이름표 글자", "#FFFF00", key="lc")
             
-    bg_color = st.color_picker("전체 배경 (빈공간)", "#000000")
+    # [변경] 전체 배경 기본 노란색
+    bg_color = st.color_picker("전체 배경 (빈공간)", "#FFFF00")
 
     design = {
         'bg_color': bg_color, 
@@ -238,4 +240,4 @@ with col_R:
     st.image(final_img, use_container_width=True)
     buf = BytesIO()
     final_img.save(buf, format="JPEG", quality=100)
-    st.download_button("💾 이미지 다운로드", buf.getvalue(), "shorts_spicy_2.jpg", "image/jpeg", use_container_width=True)
+    st.download_button("💾 이미지 다운로드", buf.getvalue(), "shorts_yellow.jpg", "image/jpeg", use_container_width=True)
