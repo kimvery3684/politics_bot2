@@ -57,10 +57,8 @@ DB_PRESIDENTS = ["윤석열", "문재인", "박근혜", "이명박", "노무현"
 DB_FIRST_LADIES = ["김건희", "김정숙", "김혜경", "이순자", "권양숙", "손명순", "김옥숙"]
 DB_CONSERVATIVE = ["한동훈", "이준석", "오세훈", "홍준표", "나경원", "안철수", "원희룡", "배현진", "주호영", "권성동", "장제원", "김기현", "인요한", "추경호"]
 DB_PROGRESSIVE = ["이재명", "조국", "김동연", "이낙연", "추미애", "정청래", "고민정", "박주민", "김남국", "임종석", "유시민", "김어준", "박용진"]
-# [추가됨] 재계/기업인 리스트
 DB_BUSINESS = ["이재용", "정의선", "김승연", "최태원"]
 
-# 전체 명단 통합
 ALL_NAMES = sorted(list(set(DB_PRESIDENTS + DB_FIRST_LADIES + DB_CONSERVATIVE + DB_PROGRESSIVE + DB_BUSINESS)))
 
 # --- [4. 기능 함수들] ---
@@ -90,15 +88,36 @@ def create_quiz_image(target_names, d):
     font_bot = get_font(d['bot_fs'])
     font_label = get_font(d['label_fs'])
 
-    # 상단 바
+    # --- 1. 상단 바 그리기 ---
     draw.rectangle([(0, 0), (1080, d['top_h'])], fill=d['top_bg'])
+    
     try:
-        text_x = 540
-        text_y = (d['top_h'] / 2) + d['top_y_adj']
-        draw.text((text_x, text_y), d['top_text'], font=font_top, fill=d['top_color'], anchor="mm", align="center", spacing=d['top_lh'])
-    except: pass
+        # 텍스트를 줄바꿈(\n) 기준으로 쪼갭니다.
+        lines = d['top_text'].split('\n')
+        
+        # 전체 텍스트 덩어리의 높이 계산 (중앙 정렬을 위해)
+        # 높이 = (줄 수 * 폰트크기) + ((줄 수 - 1) * 줄간격)
+        total_text_h = (len(lines) * d['top_fs']) + ((len(lines) - 1) * d['top_lh'])
+        
+        # 시작 Y 좌표 계산 (박스 중앙 - 텍스트 절반 + 미세조정)
+        current_y = (d['top_h'] - total_text_h) / 2 + d['top_y_adj']
+        
+        for i, line in enumerate(lines):
+            # i가 0이면(첫번째 줄) -> 색상1, 그 외(두번째 줄 등) -> 색상2
+            fill_color = d['top_color_1'] if i == 0 else d['top_color_2']
+            
+            # 한 줄씩 그리기 (가운데 정렬)
+            # anchor="mt" (Middle Top) 기준
+            draw.text((540, current_y), line, font=font_top, fill=fill_color, anchor="mt")
+            
+            # 다음 줄 Y 좌표로 이동
+            current_y += d['top_fs'] + d['top_lh']
 
-    # 중앙 그리드
+    except Exception as e:
+        print(f"Text Error: {e}")
+        pass
+
+    # --- 2. 중앙 그리드 (사진 4장) ---
     grid_start_y = d['top_h']
     grid_end_y = 1920 - d['bot_h']
     grid_height = grid_end_y - grid_start_y
@@ -135,7 +154,7 @@ def create_quiz_image(target_names, d):
         draw.text((pos[0] + cell_w/2, label_y + label_h/2), name, font=font_label, fill=d['label_color'], anchor="mm")
         draw.rectangle([pos[0], pos[1], pos[0]+cell_w, pos[1]+cell_h], outline="black", width=2)
 
-    # 하단 바
+    # --- 3. 하단 바 ---
     draw.rectangle([(0, 1920 - d['bot_h']), (1080, 1920)], fill=d['bot_bg'])
     try:
         bot_text_x = 540
@@ -145,7 +164,7 @@ def create_quiz_image(target_names, d):
     return canvas
 
 # --- [5. 메인 UI] ---
-st.title("🟡 2호점: 옐로우 에디션 (정밀조절)")
+st.title("🟡 2호점: 옐로우 에디션 (2줄 색상 분리)")
 col_L, col_R = st.columns([1, 1.3])
 
 with col_L:
@@ -153,7 +172,6 @@ with col_L:
     with st.expander("👥 인물 구성", expanded=True):
         mode = st.radio("방식", ["🎲 랜덤", "✅ 직접 선택"], horizontal=True, label_visibility="collapsed")
         
-        # [변경] 기본 선택 인물을 요청하신 4명으로 설정
         if 'c_names' not in st.session_state: 
             st.session_state.c_names = ["김승연", "이재용", "정의선", "최태원"]
         
@@ -164,7 +182,6 @@ with col_L:
             sel = st.multiselect("4명 선택", ALL_NAMES, default=st.session_state.c_names[:4])
             if len(sel) == 4: st.session_state.c_names = sel
         
-        # 사진 등록
         st.write("---")
         with st.popover("📸 사진 업로드 및 관리"):
             for name in st.session_state.c_names:
@@ -186,22 +203,29 @@ with col_L:
             if selected_q != st.session_state.q_text:
                 st.session_state.q_text = selected_q
 
-        top_text = st.text_area("상단 문구 수정", st.session_state.q_text, height=80)
+        top_text = st.text_area("상단 문구 수정 (줄바꿈으로 1, 2줄 구분)", st.session_state.q_text, height=80)
     
     # 3. 디자인 정밀 조절
-    st.header("🎨 디자인 초정밀 설정 (노란맛)")
+    st.header("🎨 디자인 초정밀 설정")
     
     with st.expander("⬆️ 상단 바 (Top Bar) 설정", expanded=True):
         col_t1, col_t2 = st.columns(2)
         with col_t1:
             top_h = st.slider("배경 높이", 100, 600, 400)
-            # [변경] 기본값 노란색(#FFFF00)
-            top_bg = st.color_picker("배경색", "#FFFF00", key="tbg")
+            top_bg = st.color_picker("배경색", "#000000", key="tbg") # 배경 검정 추천
         with col_t2:
             top_fs = st.slider("글자 크기", 20, 150, 65)
-            # [변경] 글자색 기본 검정(#000000)
-            top_color = st.color_picker("글자색", "#000000", key="tc")
         
+        st.markdown("---")
+        st.caption("🎨 줄별 글자 색상 선택")
+        c_tc1, c_tc2 = st.columns(2)
+        with c_tc1:
+            # 1번째 줄 색상
+            top_color_1 = st.color_picker("1번째 줄 색상", "#FF0000", key="tc1") # 빨강 추천
+        with c_tc2:
+            # 2번째 줄 색상
+            top_color_2 = st.color_picker("2번째 줄 색상", "#FFFFFF", key="tc2") # 흰색 추천
+
         st.markdown("---")
         top_lh = st.slider("행간 (줄 간격)", 0, 150, 20)
         top_y_adj = st.slider("글자 위치 (위/아래)", -200, 200, 0)
@@ -211,11 +235,9 @@ with col_L:
         col_b1, col_b2 = st.columns(2)
         with col_b1:
             bot_h = st.slider("배경 높이", 100, 600, 350, key="bh")
-            # [변경] 기본값 노란색
             bot_bg = st.color_picker("배경색", "#FFFF00", key="bbg")
         with col_b2:
             bot_fs = st.slider("글자 크기", 20, 150, 45, key="bfs")
-            # [변경] 글자색 기본 검정
             bot_color = st.color_picker("글자색", "#000000", key="bc")
         
         st.markdown("---")
@@ -227,16 +249,16 @@ with col_L:
         label_h = st.slider("이름표 높이", 30, 200, 80)
         label_fs = st.slider("이름 글자 크기", 20, 100, 45)
         c3, c4 = st.columns(2)
-        # 이름표는 빨강 배경이 눈에 잘 띔
         label_bg = c3.color_picker("이름표 배경", "#FF0000", key="lbg")
         label_color = c4.color_picker("이름표 글자", "#FFFF00", key="lc")
             
-    # [변경] 전체 배경 기본 노란색
     bg_color = st.color_picker("전체 배경 (빈공간)", "#FFFF00")
 
     design = {
         'bg_color': bg_color, 
-        'top_text': top_text, 'top_h': top_h, 'top_fs': top_fs, 'top_lh': top_lh, 'top_y_adj': top_y_adj, 'top_bg': top_bg, 'top_color': top_color,
+        'top_text': top_text, 'top_h': top_h, 'top_fs': top_fs, 'top_lh': top_lh, 'top_y_adj': top_y_adj, 'top_bg': top_bg,
+        'top_color_1': top_color_1, # [NEW] 1줄 색상
+        'top_color_2': top_color_2, # [NEW] 2줄 색상
         'bot_text': bot_text, 'bot_h': bot_h, 'bot_fs': bot_fs, 'bot_lh': bot_lh, 'bot_y_adj': bot_y_adj, 'bot_bg': bot_bg, 'bot_color': bot_color,
         'label_h': label_h, 'label_fs': label_fs, 'label_bg': label_bg, 'label_color': label_color, 'img_zoom': img_zoom
     }
