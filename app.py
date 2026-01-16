@@ -57,7 +57,11 @@ DB_PRESIDENTS = ["윤석열", "문재인", "박근혜", "이명박", "노무현"
 DB_FIRST_LADIES = ["김건희", "김정숙", "김혜경", "이순자", "권양숙", "손명순", "김옥숙"]
 DB_CONSERVATIVE = ["한동훈", "이준석", "오세훈", "홍준표", "나경원", "안철수", "원희룡", "배현진", "주호영", "권성동", "장제원", "김기현", "인요한", "추경호"]
 DB_PROGRESSIVE = ["이재명", "조국", "김동연", "이낙연", "추미애", "정청래", "고민정", "박주민", "김남국", "임종석", "유시민", "김어준", "박용진"]
-ALL_NAMES = sorted(list(set(DB_PRESIDENTS + DB_FIRST_LADIES + DB_CONSERVATIVE + DB_PROGRESSIVE)))
+# [추가됨] 재계/기업인 리스트
+DB_BUSINESS = ["이재용", "정의선", "김승연", "최태원"]
+
+# 전체 명단 통합
+ALL_NAMES = sorted(list(set(DB_PRESIDENTS + DB_FIRST_LADIES + DB_CONSERVATIVE + DB_PROGRESSIVE + DB_BUSINESS)))
 
 # --- [4. 기능 함수들] ---
 def get_font(size):
@@ -148,7 +152,10 @@ with col_L:
     # 1. 인물 구성
     with st.expander("👥 인물 구성", expanded=True):
         mode = st.radio("방식", ["🎲 랜덤", "✅ 직접 선택"], horizontal=True, label_visibility="collapsed")
-        if 'c_names' not in st.session_state: st.session_state.c_names = ["윤석열", "이재명", "한동훈", "조국"]
+        
+        # [변경] 기본 선택 인물을 요청하신 4명으로 설정
+        if 'c_names' not in st.session_state: 
+            st.session_state.c_names = ["김승연", "이재용", "정의선", "최태원"]
         
         if mode == "🎲 랜덤":
             if st.button("🔄 인물 랜덤 뽑기", type="secondary", use_container_width=True):
